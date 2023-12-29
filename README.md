@@ -2,18 +2,18 @@
 
 ================= Install and Configure the Jenkins-Master & Jenkins-Agent =====================
 ## Create EC2 instance named as "Jenkins-Master". It must have t3.medium as instance type and ROM as 20GB as we will have Jenkins with multiple installation & plugins in it.
-$ sudo apt update
-$ sudo apt upgrade
-$ sudo nano /etc/hostname
-$ sudo init 6
-$ sudo apt install openjdk-17-jre
-$ java -version
+$ sudo apt update <br>
+$ sudo apt upgrade <br>
+$ sudo nano /etc/hostname <br>
+$ sudo init 6 <br>
+$ sudo apt install openjdk-17-jre <br>
+$ java -version <br>
 
-$ sudo nano /etc/ssh/sshd_config
-Uncomment :
-=> PubkeyAuthentication 
-=> AuthorizedKeysFile
-$ sudo service sshd reload
+$ sudo nano /etc/ssh/sshd_config <br>
+Uncomment : <br>
+=> PubkeyAuthentication <br>
+=> AuthorizedKeysFile <br>
+$ sudo service sshd reload   <br>
 
 
 ## Install Jenkins (to copy Jenkins install command, Refer to this link: https://www.jenkins.io/doc/book/installing/linux/)
@@ -23,42 +23,47 @@ curl -fsSL https://pkg.jenkins.io/debian/jenkins.io-2023.key | sudo tee \
 echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
   https://pkg.jenkins.io/debian binary/ | sudo tee \
   /etc/apt/sources.list.d/jenkins.list > /dev/null
-sudo apt-get update
-sudo apt-get install jenkins
+sudo apt-get    <br>
+sudo apt-get install jenkins    <br>
 
-$ sudo systemctl enable jenkins       //Enable the Jenkins service to start at boot
-$ sudo systemctl start jenkins        //Start Jenkins as a service
+$ sudo systemctl enable jenkins       //Enable the Jenkins service to start at boot   <br>
+$ sudo systemctl start jenkins        //Start Jenkins as a service   <br>
 $ systemctl status jenkins
 
 ## Create EC2 instance named as "Jenkins-Agent". we can take t2.micro instance here.
-$ sudo apt update
-$ sudo apt upgrade
-$ sudo nano /etc/hostname
-$ sudo init 6
-$ sudo apt install openjdk-17-jre
+$ sudo apt update <br>
+$ sudo apt upgrade <br>
+$ sudo nano /etc/hostname <br>
+$ sudo init 6 <br>
+$ sudo apt install openjdk-17-jre <br>
 $ java -version
 
-$ sudo apt-get install docker.io
-$ sudo usermod -aG docker $USER
-$ sudo init 6
+$ sudo apt-get install docker.io <br>
 
-$ sudo nano /etc/ssh/sshd_config
-Uncomment :
-=> PubkeyAuthentication 
-=> AuthorizedKeysFile
-$ sudo service sshd reload
+$ sudo usermod -aG docker $USER <br>
+
+$ sudo init 6 <br>
+
+$ sudo nano /etc/ssh/sshd_config  
+Uncomment :  <br>
+=> PubkeyAuthentication  <br>
+=> AuthorizedKeysFile <br>
+$ sudo service sshd reload <br>
 
 ## Go to Jenkins-Master ubuntu machine terminal,
-$ ssh-keygen -t ed25519
-$ cd .ssh
-Copy id_ed25519.pub file content. 
+$ ssh-keygen -t ed25519 <br>
+$ cd .ssh                                                                                            <br>
+Copy id_ed25519.pub file content.                                        
+Copy id_ed25519.pub file content.                                                                    <br>
 
 ## Go to Jenkins-Agent ubuntu machine terminal,
-$ cd .ssh
-$ vi authorized_keys
-Now paste that id_ed25519.pub public ssh key of Jenkins-Master to authorized_keys of Jenkins-Agent.
+Copy id_ed25519.pub file content.                                        
+$ cd .ssh <br>
+$ vi authorized_keys <br>
 
-=> Now copy ip address of Jenkins-Master and open it in terminal with port 8080, to get Jenkins UI.
+Now paste that id_ed25519.pub public ssh key of Jenkins-Master to authorized_keys of Jenkins-Agent.  <br>
+
+=> Now copy ip address of Jenkins-Master and open it in terminal with port 8080, to get Jenkins UI. <br>
 
 Now go to Jenkins-Master ubuntu machine terminal,
 $ sudo cat /var/lib/jenkins/secrets/initialAdminPassword
