@@ -1,103 +1,119 @@
-## register-app DevOps CICD Pipeline instruction
+# Register-App DevOps CICD Pipeline instruction
 
-================= Install and Configure the Jenkins-Master & Jenkins-Agent =====================
-## Create EC2 instance named as "Jenkins-Master". It must have t3.medium as instance type and ROM as 20GB as we will have Jenkins with multiple installation & plugins in it.
-$ sudo apt update <br>
-$ sudo apt upgrade <br>
-$ sudo nano /etc/hostname <br>
-$ sudo init 6 <br>
-$ sudo apt install openjdk-17-jre <br>
-$ java -version <br>
+## ======== Install & Configure the Jenkins Master & Agent ===========
+```
+### Create EC2 instance named as "Jenkins-Master". It must have t3.medium as instance type and ROM as 20GB
+ as we will have Jenkins with multiple installation & plugins in it.
 
-$ sudo nano /etc/ssh/sshd_config <br>
-Uncomment : <br>
-=> PubkeyAuthentication <br>
-=> AuthorizedKeysFile <br>
-$ sudo service sshd reload   <br>
+$ sudo apt update 
+$ sudo apt upgrade 
+$ sudo nano /etc/hostname
+$ sudo init 6 
+$ sudo apt install openjdk-17-jre 
+$ java -version 
 
+$ sudo nano /etc/ssh/sshd_config 
+Uncomment : 
+=> PubkeyAuthentication 
+=> AuthorizedKeysFile 
+$ sudo service sshd reload   
+```
 
-## Install Jenkins (to copy Jenkins install command, Refer to this link: https://www.jenkins.io/doc/book/installing/linux/)
+## ============ Install Jenkins into Jenkins-Master ============= 
+```
+Find Jenkins installation command here: https://www.jenkins.io/doc/book/installing/linux/
+(I'd copied the installion link, copy below link and paste in your terminal and hit enter to install jenkins at ubuntu machine.)
 
-curl -fsSL https://pkg.jenkins.io/debian/jenkins.io-2023.key | sudo tee \
-  /usr/share/keyrings/jenkins-keyring.asc > /dev/null
-echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
-  https://pkg.jenkins.io/debian binary/ | sudo tee \
-  /etc/apt/sources.list.d/jenkins.list > /dev/null
-sudo apt-get    <br>
-sudo apt-get install jenkins    <br>
+curl -fsSL https://pkg.jenkins.io/debian/jenkins.io-2023.key | sudo tee /usr/share/keyrings/jenkins-keyring.asc > /dev/null
+echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian binary/ | sudo tee /etc/apt/sources.list.d/jenkins.list > /dev/null
+ 
+$ sudo apt-get    
+$ sudo apt-get install jenkins    
 
-$ sudo systemctl enable jenkins       //Enable the Jenkins service to start at boot   <br>
-$ sudo systemctl start jenkins        //Start Jenkins as a service   <br>
-$ systemctl status jenkins
+$ sudo systemctl enable jenkins       //Enable the Jenkins service to start at boot   
+$ sudo systemctl start jenkins        //Start Jenkins as a service   
+$ systemctl status jenkins   
+```
+## ======== Create EC2 instance named as "Jenkins-Agent" =========
+```
+### We can take t2.micro instance for Jenkins-Agent.
+$ sudo apt update 
+$ sudo apt upgrade 
+$ sudo nano /etc/hostname 
+$ sudo init 6 
+$ sudo apt install openjdk-17-jre 
+$ java -version  
 
-## Create EC2 instance named as "Jenkins-Agent". we can take t2.micro instance here.
-$ sudo apt update <br>
-$ sudo apt upgrade <br>
-$ sudo nano /etc/hostname <br>
-$ sudo init 6 <br>
-$ sudo apt install openjdk-17-jre <br>
-$ java -version
+$ sudo apt-get install docker.io 
 
-$ sudo apt-get install docker.io <br>
+$ sudo usermod -aG docker $USER 
 
-$ sudo usermod -aG docker $USER <br>
-
-$ sudo init 6 <br>
+$ sudo init 6 
 
 $ sudo nano /etc/ssh/sshd_config  
-Uncomment :  <br>
-=> PubkeyAuthentication  <br>
-=> AuthorizedKeysFile <br>
-$ sudo service sshd reload <br>
+Uncomment :  
+=> PubkeyAuthentication  
+=> AuthorizedKeysFile 
+$ sudo service sshd reload 
+```
 
-## Go to Jenkins-Master ubuntu machine terminal,
-$ ssh-keygen -t ed25519 <br>
-$ cd .ssh                                                                                            <br>
-Copy id_ed25519.pub file content.                                        
-Copy id_ed25519.pub file content.                                                                    <br>
+## ======= Set up Jenkins-Master with Jenkins-Agent(slave) ========
+```
+### Go to Jenkins-Master ubuntu machine terminal,
+$ ssh-keygen -t ed25519 
+$ cd .ssh                                                                                                                                   
+- Copy id_ed25519.pub file content.                                                                    
 
-## Go to Jenkins-Agent ubuntu machine terminal,
-Copy id_ed25519.pub file content.                                        
-$ cd .ssh <br>
-$ vi authorized_keys <br>
+### Go to Jenkins-Agent ubuntu machine terminal,   
+$ cd .ssh 
+$ vi authorized_keys 
 
-Now paste that id_ed25519.pub public ssh key of Jenkins-Master to authorized_keys of Jenkins-Agent.  <br>
+Now paste that id_ed25519.pub public ssh key of Jenkins-Master to authorized_keys of Jenkins-Agent.
 
-=> Now copy ip address of Jenkins-Master and open it in terminal with port 8080, to get Jenkins UI. <br>
+=> Now copy ip address of Jenkins-Master and open it in terminal with port 8080, to get Jenkins UI.
 
-Now go to Jenkins-Master ubuntu machine terminal,
-$ sudo cat /var/lib/jenkins/secrets/initialAdminPassword
-Copy the password and use it in Jenkins UI. Install suggested plugins.
-Provide firstname, username/password, email, etc. (say I gave, username/password as clouduser). Now go to,
+### Now go to Jenkins-Master ubuntu machine terminal,
+$ sudo cat /var/lib/jenkins/secrets/initialAdminPassword   
 
-Manage Jenkins -> Nodes -> Build-In Node-> configure-> Set “Number of executors” = 0 -> Save.
+Copy the password and use it in Jenkins UI. Install suggested plugins.   
+Provide firstname, username/password, email, etc. (say I gave, username/password as clouduser).
 
-Manage Jenkins -> Nodes -> New Node -> create new node with name “Jenkins-Agent” -> click on radio button of ‘permanent agent’ -> create.
+Now go to, Manage Jenkins -> Nodes -> Build-In Node-> configure-> Set “Number of executors” = 0 -> Save.
 
-#Provide below details inside Jenkins-Agent configure.
-Name = Jenkins-Agent
-Description = Jenkins-Agent
-Number of executors = 2
-Remote root directory = /home/ubuntu
-Lable = Jenkis-Agent
-Usage = Use this node as much as possible
-Launch method = Launch agents via SSH
-Host = provide private ip address of Jenkins-Agent EC2-instance.
-Credentials : click on ADD.
-  kind = SSH username with private key.
-  ID = Jenkins-Agent
-  Description = Jenkins-Agent
-  Username = ubuntu
-  Enter directly private key = provide private key of Jenkins-Master here in text form. use cat command at .ssh directory of ubuntu and paste it here. (id_ed25519)
-  click on 'save'.
-  Now select this credentials.
-Host Key Verification Strategy = Non verifying verification strategy
-Availability = Keep this agent as much as possible
-Click on 'save' button.
+Manage Jenkins -> Nodes -> New Node -> create new node with name “Jenkins-Agent” -> 
+click on radio button of ‘permanent agent’ -> create. 
 
-==============Integrate Maven, JDK, GITHUB to Jenkins==============
+### Provide below details inside Jenkins-Agent configure.
+Name = Jenkins-Agent   
+Description = Jenkins-Agent   
+Number of executors = 2   
+Remote root directory = /home/ubuntu   
+Lable = Jenkis-Agent   
+Usage = Use this node as much as possible   
+Launch method = Launch agents via SSH   
+Host = provide private ip address of Jenkins-Agent EC2-instance.   
+- Credentials : click on ADD.   
+    kind = SSH username with private key.   
+    ID = Jenkins-Agent   
+    Description = Jenkins-Agent   
+    Username = ubuntu   
+    Enter directly private key = provide private key of Jenkins-Master here in text form. 
+    [Use cat command at .ssh directory of ubuntu and paste it here. (say, id_ed25519)]
+    
+    Click on 'Save'.   
 
-Dashboard -> Manage Jenkins -> Plugins -> search for 'Maven integration plugin', 'Pipeline maven integration plugin', and 'Eclipse Temurin installer Plugin'.
+Now select this credentials.   
+Host Key Verification Strategy = Non verifying verification strategy   
+Availability = Keep this agent as much as possible   
+
+Click on 'Save' button.   
+```
+
+## ============== Integrate Maven, JDK, GITHUB to Jenkins ===============
+```
+Dashboard -> Manage Jenkins -> Plugins -> search for 3 maven plugins.
+'Maven integration plugin', 'Pipeline maven integration plugin', and 'Eclipse Temurin installer Plugin'
+Select those with tick mark, and hit on install.
 
 Dashboard -> tools -> Maven Installations -> add maven ->
 Name = Maven3
@@ -105,18 +121,21 @@ Give tick mark on 'Install automatically' -> apply -> save.
 
 Dashboard -> tools -> JDK installations -> add jdk ->
 Name = Java17
-Give tick mark on 'Install automatically' -> add installer -> install from adoptium.net -> in version, select jdk-17.0.5+8 -> apply -> save.
+Give tick mark on 'Install automatically' -> add installer -> install from adoptium.net ->
+ in version, select jdk-17.0.5+8 -> apply -> save.
 
 Dashboard-> Manage Jenkins -> Credentials -> Stores scoped to Jenkins -> global -> add credentials.
 username = provide github username (AadityaUoHyd)
-password = provide access token of your github(github settings -> developer settings -> personal access token -> token classic -> generate new token, OR use older one)
+password = provide access token of your github(github settings -> developer settings -> 
+personal access token -> token classic -> generate new token, OR use older one.
 
 id = github
 description = github
 click on save.
+```
 
-==================Creating Jenkins Pipeline==================
-
+## ================= Creating Jenkins Pipeline ==================
+```
 Go to dashboard -> new item -> enter item name (say, register-app-ci), click on pipeline -> ok
 give tick mark on "Discard old builds" -> provide value as '2' at "Max# of builds to keep" 
 under pipeline, select "pipeline script from SCM"
@@ -126,23 +145,30 @@ scriptpath = jenkinsfile
 apply -> save.
 
 You can now, test the pipeline with -> "Build now".
+```
 
-================= Install and Configure the SonarQube in new ubuntu EC2 SonarQube machine ==================
-Create new EC2 instance with name "SonarQube". It must have t3.medium as instance type as we will have sonarqube and postgresql in it.
+## ======= Install & Configure SonarQube in new machine ==========
+```
+### Create new ubuntu EC2 instance with name "SonarQube". 
+It must have t3.medium as instance type as we will have sonarqube and postgresql in it.
+
 ## Update Package Repository and Upgrade Packages
     $ sudo apt update
     $ sudo apt upgrade
+
 ## Add PostgresSQL repository
     $ sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
     $ wget -qO- https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo tee /etc/apt/trusted.gpg.d/pgdg.asc &>/dev/null
+
 ## Install PostgreSQL
     $ sudo apt update
     $ sudo apt-get -y install postgresql postgresql-contrib
     $ sudo systemctl enable postgresql
+
 ## Create Database for Sonarqube
     $ sudo passwd postgres
     $ su - postgres
-	(say password is, postgres)
+      (say password is, postgres)
     $ createuser sonar
     $ psql 
     $ ALTER USER sonar WITH ENCRYPTED password 'sonar';
@@ -150,18 +176,20 @@ Create new EC2 instance with name "SonarQube". It must have t3.medium as instanc
     $ grant all privileges on DATABASE sonarqube to sonar;
     $ \q
     $ exit
+
 ## Add Adoptium repository
     $ sudo bash
     $ wget -O - https://packages.adoptium.net/artifactory/api/gpg/key/public | tee /etc/apt/keyrings/adoptium.asc
     $ echo "deb [signed-by=/etc/apt/keyrings/adoptium.asc] https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main" | tee /etc/apt/sources.list.d/adoptium.list
+
  ## Install Java 17
     $ apt update
     $ apt install temurin-17-jdk -y
     $ update-alternatives --config java
     $ /usr/bin/java --version
     $ exit 
-## Linux Kernel Tuning
-   # Increase Limits
+
+## Linux Kernel Tuning, to Increase Limits run below command :
     $ sudo vim /etc/security/limits.conf
     //Paste the below values at the bottom of the file
     sonarqube   -   nofile   65536
@@ -171,23 +199,28 @@ Create new EC2 instance with name "SonarQube". It must have t3.medium as instanc
     sudo vim /etc/sysctl.conf
     //Paste the below values at the bottom of the file
     vm.max_map_count = 262144
+```
 
-#### Sonarqube Installation ####
-## Download and Extract
+## ======== Sonarqube Installation and Continuous Integration of Jenkins ==========
+```
+### Download and Extract
     $ sudo wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-9.9.0.65466.zip
     $ sudo apt install unzip
     $ sudo unzip sonarqube-9.9.0.65466.zip -d /opt
     $ sudo mv /opt/sonarqube-9.9.0.65466 /opt/sonarqube
+
 ## Create user and set permissions
      $ sudo groupadd sonar
      $ sudo useradd -c "user to run SonarQube" -d /opt/sonarqube -g sonar sonar
      $ sudo chown sonar:sonar /opt/sonarqube -R
+
 ## Update Sonarqube properties with DB credentials
      $ sudo vim /opt/sonarqube/conf/sonar.properties
      //Find and replace the below values, you might need to add the sonar.jdbc.url
      sonar.jdbc.username=sonar
      sonar.jdbc.password=sonar
      sonar.jdbc.url=jdbc:postgresql://localhost:5432/sonarqube
+
 ## Create service for Sonarqube
 $ sudo vim /etc/systemd/system/sonar.service
 //Paste the below into the file
@@ -221,7 +254,8 @@ say, http://3.110.104.53:9000/
 default username/password of sonarqube is admin/admin.
 (say rename the password with, 'sonarqube')
 
-Go to myaccount -> security -> provide "jenkins-sonarqube-token" as Generate token name, select "Global Analysis Token", expiration as "no expiration".
+Go to myaccount -> security -> provide "jenkins-sonarqube-token" as Generate token name, 
+select "Global Analysis Token", expiration as "no expiration".
 Generate the sonarqube-token and copy it for future use.
 
 Now go to Manage Jenkins -> add credentials -> 
@@ -247,12 +281,15 @@ apply -> save.
 
 Now go to sonarqube portal and click on Administration -> configuration -> webhooks -> click on create.
 name = sonarqube-webhook
-url = http://172.31.34.149:8080/sonarqube-webhook/             (here we have given, private ip address of jenkins-master as 172.31.34.149)
+url = http://172.31.34.149:8080/sonarqube-webhook/             
+(here we have given, private ip address of jenkins-master as 172.31.34.149)
 click on create.
 
-Test your pipeline with build now, but before that ensure you've written appropriate 'jenkinsfile' in your github(register-app repo).
+Write appropriate 'jenkinsfile' in your github(register-app repo), and now test your pipeline with clicking 'Build now'.
+```
 
-===============Docker=====================
+## =============== Docker Set up =====================
+```
 Install docker related 6 plugins in Jenkins. Go to Dashboard -> Manage Jenkins -> Plugins
 click on available plugins -> search name with "docker". select these 6 plugins with tick mark.
 Docker, Docker Commons, Docker pipeline, Docker API, Docker-build-step, CloudBees Docker Build and Publish.
@@ -262,11 +299,13 @@ Now you need to add your docker credentials into jenkins.
 Dashboard -> Manage jenkins -> Credentials -> Score scoped to jenkins -> Add credentials 
 Kind = username and password
 username = provide username of your dockerhub account (say, aadiraj48dockerhub)
-password = accesstoken of your dockerhub account (if you dont have any, create one at dockerhub account.)
+password = access-token of your dockerhub account (if you dont have any, create one at dockerhub account.)
 id = give some label of the credentails(have to provide same name in jenkinsfile of github. Say, dockerhub) 
 
+```
 
-============================================================= Setup Bootstrap Server for eksctl and Setup Kubernetes using eksctl =============================================================
+## ========== Setup Bootstrap Server for eksctl ==========
+```
 Create one EC2 instance with name - EKS-Bootstrap-Server (with t3.medium instance type). connect to ec2 with mobaxterm.
 # sudo apt-get update
 # sudo apt-get upgrade -y
@@ -275,7 +314,7 @@ rename it as EKS-K8s-Cluster.
 # sudo su
 # cd ~
 
-## Install AWS Cli on the above EC2 (Refer--https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+### Install AWS Cli on the above EC2 (Refer--https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
 
 $ curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
 $ apt install unzip
@@ -289,15 +328,18 @@ $ pip3 install --user awscli
 $ sudo ln -s $HOME/.local/bin/aws /usr/bin/aws
 
 $ aws --version
+```
 
-## Installing kubectl (Refer--https://docs.aws.amazon.com/eks/latest/userguide/install-kubectl.html)
+## =========== Setup Kubernetes using eksctl ================
+```
+Installing kubectl (Refer--https://docs.aws.amazon.com/eks/latest/userguide/install-kubectl.html)
 $ curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.27.1/2023-04-19/bin/linux/amd64/kubectl
 $ ll 
 $ chmod +x ./kubectl  //Gave executable permisions
 $ mv kubectl /bin   //Because all our executable files are in /bin
 $ kubectl version --output=yaml
 
-## Installing  eksctl (Refer---https://github.com/eksctl-io/eksctl/blob/main/README.md#installation)
+### Installing  eksctl (Refer---https://github.com/eksctl-io/eksctl/blob/main/README.md#installation)
 $ curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
 $ cd /tmp
 $ ll
@@ -313,12 +355,14 @@ click on 'create role'.
 Now go to EKS-K8s-Cluster EC2 machine -> Actions -> security -> modify IAM role.
 select eksctl_role -> update IAM role.
 
-## Setup Kubernetes using eksctl (Refer--https://github.com/aws-samples/eks-workshop/issues/734)
+### Setup Kubernetes using eksctl (Refer--https://github.com/aws-samples/eks-workshop/issues/734)
 $ eksctl create cluster --name aadi-eks-cluster --region ap-south-1 --node-type t2.small --nodes 3
 
 $ kubectl get nodes
+```
 
-============================================================= ArgoCD Installation on EKS Cluster and Add EKS Cluster to ArgoCD =============================================================
+## ========= ArgoCD Installation on EKS Cluster ==========
+```
 1 ) First, create a namespace
     $ kubectl create namespace argocd
 
@@ -348,8 +392,10 @@ $ kubectl get nodes
 Now use the load-balancer url and hit the browser. use username as 'admin', and passcode as what we decoded just now.(say, swnt0ETRoMzCUBoD)
 After loggin into argoCD, Go to User Info -> update password -> provide old passcode and give new one. (say, admin123).
 Now logout and login with new password.
+```
 
-## Add EKS Cluster to ArgoCD
+## ================ Add EKS Cluster to ArgoCD ================
+```
 9 ) login to ArgoCD from CLI
     $ argocd login a3dab89c077be4475ae70559e0e1a798-1215184296.ap-south-1.elb.amazonaws.com --username admin
 
@@ -370,7 +416,7 @@ Now it'll ask for password, provide your newly updated argocd password to login 
 click on argocd settings -> repositories -> connect repo
 choose your connection method via HTTPS
 provide github repository (say, https://github.com/AadityaUoHyd/gitops-register-app)
-provide your github username (AadityaUoHyd) and password as erstwhile created github token (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).
+provide your github username (AadityaUoHyd) and password as erstwhile created github personal access token.
 click on 'connect'.
 
 14 ) Go to argocd. Application -> New App 
@@ -392,11 +438,17 @@ Now run these K8s command on eks cluster, which been added to argocd.
 $ kubectl get pods
 $ kubectl get svc
 
-Now copy the load-balancer external-ip (say, a745211521a3140a0844369c2400389e-873276740.ap-south-1.elb.amazonaws.com).
-Go to browser and hit the url with => a745211521a3140a0844369c2400389e-873276740.ap-south-1.elb.amazonaws.com:8080/webapp/
-You'll find your register-app is running successfully.
+Now copy the load-balancer external-ip 
+(say, a745211521a3140a0844369c2400389e-873276740.ap-south-1.elb.amazonaws.com).
 
-# now automate this deployment process.
+Go to browser and hit the url with => 
+a745211521a3140a0844369c2400389e-873276740.ap-south-1.elb.amazonaws.com:8080/webapp/
+
+You'll find your register-app is running successfully.
+```
+
+## ========= Automate the deployment process (Continuous Delivery) ===========
+```
 Go to jenkins dashboard -> new item ->
 enter an item name = gitops-register-app-cd
 pipeline -> ok.
@@ -414,7 +466,8 @@ select your Github credentials from drop-down menu.
 Chose your correct branch (mine is master, which is anyway default). 
 Apply -> Save.
 
-Go to Jenkins -> click on username (clouduser) menu -> configure -> API Token -> Add new token -> provide default name (say, JENKINS_API_TOKEN) -> Generate.
+Go to Jenkins -> click on username (clouduser) menu -> configure -> API Token -> 
+Add new token -> provide default name (say, JENKINS_API_TOKEN) -> Generate.
 copy this jenkins token for future use.
 apply -> save.
 
@@ -424,5 +477,11 @@ secret = provide newly created jenkins token.
 provide "JENKINS_API_TOKEN" at ID and Description. click on create.
 
 Dashboard -> register-app-ci -> Configuration -> Build Triggers 
-Tick mark on poll SCM. give 5 star sign.(it'll now monitor every minute to trigger build (Continuous Integration) as per any changes in github repo of register-app, and further it will trigger Continuous Delivery from gitops-register-app repo using AgroCD)
+Tick mark on poll SCM. give 5 star sign. It'll now monitor every minute to trigger build 
+(Continuous Integration) as per any changes in github repo of register-app, and further it will 
+trigger Continuous Delivery from gitops-register-app repo using AgroCD.
+
 Apply -> save.
+```
+
+**Test the entire system with doing some custom changes in your code at development and then add, commit & pushing it to github via git.**
