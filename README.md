@@ -444,8 +444,8 @@ Now copy the load-balancer external-ip
 Go to browser and hit the url with => 
 a745211521a3140a0844369c2400389e-873276740.ap-south-1.elb.amazonaws.com:8080/webapp/
 
-You'll find your register-app is running successfully.
 ```
+**You'll find your register-app is running successfully.**
 
 ## ========= Automate the deployment process (Continuous Delivery) ===========
 ```
@@ -484,4 +484,4 @@ trigger Continuous Delivery from gitops-register-app repo using AgroCD.
 Apply -> save.
 ```
 
-**Test the entire system with doing some custom changes in your code at development and then add, commit & pushing it to github via git.**
+**Test the entire system with doing some custom changes in your code at development and then add, commit & push it to github remote repo.**
